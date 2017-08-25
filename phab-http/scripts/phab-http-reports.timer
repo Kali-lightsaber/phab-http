@@ -1,0 +1,10 @@
+[Unit]
+Description=phab-http reports timer
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Unit=phab-http-reports.service
+ 
+[Install]
+WantedBy=timers.target
+

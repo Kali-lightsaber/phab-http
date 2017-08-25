@@ -1,0 +1,6 @@
+[Unit]
+Description=phab-http reports
+
+[Service]
+Type=oneshot
+ExecStart=/opt/epiphyte/phab-http/reports.sh

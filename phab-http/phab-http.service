@@ -1,0 +1,10 @@
+[Unit]
+Description=Phabricator HTTP Receiving hook
+
+[Service]
+ExecStart=/opt/epiphyte/phab-http/phab-http.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
