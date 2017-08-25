@@ -3,7 +3,7 @@ hooks
 
 provides synapse integration hooks to other environments
 
-[![Build Status](https://travis-ci.org/epiphyte/synapse-tools.svg?branch=master)](https://travis-ci.org/epiphyte/synapse-tools)
+[![Build Status](https://travis-ci.org/epiphyte/phabricator-matrix-bridge.svg?branch=master)](https://travis-ci.org/epiphyte/phabricator-matrix-bridge)
 
 # overall
 
