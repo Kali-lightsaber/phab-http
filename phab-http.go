@@ -71,7 +71,7 @@ type Config struct {
 	conduit   string
 	resolving []string
 	lookups   map[string]string
-	cache     *Store
+	cache     *sync.Map
 	paste     string
 	logger    *Logging
 	logDir    string
@@ -82,34 +82,6 @@ type Config struct {
 // Logging object
 type Logging struct {
 	sync.RWMutex
-}
-
-// Simple threaded store
-type Store struct {
-	mapped map[string][]string
-	sync.RWMutex
-}
-
-// Create a new store
-func NewStore() *Store {
-	return &Store{
-		mapped: make(map[string][]string),
-	}
-}
-
-// Add a value
-func (store *Store) Add(key string, val []string) {
-	store.Lock()
-	defer store.Unlock()
-	store.mapped[key] = val
-}
-
-// Get a value
-func (store *Store) Get(key string) ([]string, bool) {
-	store.RLock()
-	defer store.RUnlock()
-	val, ok := store.mapped[key]
-	return val, ok
 }
 
 // Build a query string for key/value pair
@@ -311,7 +283,7 @@ func resolvePHIDs(resolving []string, conf *Config) []string {
 		if conf.debug {
 			log.Print(element)
 		}
-		if _, ok := conf.cache.Get(element); !ok {
+		if _, ok := conf.cache.Load(element); !ok {
 			if conf.debug {
 				log.Print("calling to resolve")
 			}
@@ -347,7 +319,7 @@ func resolvePHIDs(resolving []string, conf *Config) []string {
 						if val, ok := conf.lookups[name]; ok {
 							resolved = append(resolved, "aka: "+strings.Replace(val, ",", " ", -1))
 						}
-						conf.cache.Add(final["phid"], resolved)
+						conf.cache.Store(final["phid"], resolved)
 					}
 				}
 			}
@@ -356,8 +328,9 @@ func resolvePHIDs(resolving []string, conf *Config) []string {
 	var results []string
 	for _, element := range resolving {
 		var writeRefs []string
-		if val, ok := conf.cache.Get(element); ok {
-			for _, item := range val {
+		if inter, ok := conf.cache.Load(element); ok {
+            val := inter.([]string)
+            for _, item := range val {
 				writeRefs = append(writeRefs, item)
 				results = append(results, item)
 			}
@@ -482,8 +455,8 @@ func main() {
 	conf.logDir = os.Getenv(LogFileDir)
 	conf.logger = &Logging{}
 	lookups := os.Getenv(LookupsKey)
-	conf.cache = NewStore()
-	debug, err := strconv.ParseBool(os.Getenv(DebugKey))
+	conf.cache = new(sync.Map);
+    debug, err := strconv.ParseBool(os.Getenv(DebugKey))
 	if err != nil {
 		log.Print("Unable to determine debug setting: ", err)
 		conf.debug = false
