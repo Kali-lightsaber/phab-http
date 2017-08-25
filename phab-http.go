@@ -25,7 +25,7 @@ import (
 )
 
 // Version identifier
-const Version = "0.9"
+const Version = "1.0.0"
 
 // Posting messages to rooms
 const MatrixPost = "%s/_matrix/client/r0/rooms/%s/send/m.room.message?access_token=%s"
