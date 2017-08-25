@@ -1,9 +1,5 @@
-OUTPUT=$(PWD)/bin/
+OUTPUT=
 .PHONY: all
 
-all: clean
-	make -C phab-http/ OUTPUT=$(OUTPUT)
-
-clean:
-	mkdir -p $(OUTPUT)
-	rm -f $(OUTPUT)/*
+all:
+	go build -ldflags "-X main.built=`date +%Y-%m-%dT%H:%M:%S`" -o $(OUTPUT)phab-http phab-http.go
