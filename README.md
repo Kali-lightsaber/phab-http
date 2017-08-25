@@ -1,22 +1,11 @@
-hooks
+phabricator-matrix-bridge
 ===
 
-provides synapse integration hooks to other environments
+bridge live feed from phabricator to matrix room(s)
 
 [![Build Status](https://travis-ci.org/epiphyte/phabricator-matrix-bridge.svg?branch=master)](https://travis-ci.org/epiphyte/phabricator-matrix-bridge)
 
-# overall
-
-## build
-
-clone this repository and from the hooks directory
-```
-make
-```
-
-will produce binaries in the output/bin folder
-
-## repository
+# install
 
 setup the epiphyte [repository](https://github.com/epiphyte/repository)
 
@@ -57,7 +46,6 @@ set the environment vars required in
 
 ## development/building 
 
-run the ^ hooks make or go into the phab-http dir
 ```
 make
 ```
@@ -66,6 +54,5 @@ install
 ```
 mkdir -p /opt/epiphyte/phab-http
 cp phab-http.sh phab-http /opt/epiphyte/phab-http/
-cp mbot-receiver.service /usr/lib/systemd/system/
 ```
 
