@@ -329,8 +329,8 @@ func resolvePHIDs(resolving []string, conf *Config) []string {
 	for _, element := range resolving {
 		var writeRefs []string
 		if inter, ok := conf.cache.Load(element); ok {
-            val := inter.([]string)
-            for _, item := range val {
+			val := inter.([]string)
+			for _, item := range val {
 				writeRefs = append(writeRefs, item)
 				results = append(results, item)
 			}
@@ -386,10 +386,14 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 	}
 	if isStory {
 		if len(phids) > 0 {
-			if conf.debug {
-				log.Print("Resolving phids")
+			if isTagged {
+				phids = phids[:0]
+			} else {
+				if conf.debug {
+					log.Print("Resolving phids")
+				}
+				phids = resolvePHIDs(phids, conf)
 			}
-			phids = resolvePHIDs(phids, conf)
 		}
 		var addedStory string
 		addedStory = ""
@@ -455,8 +459,8 @@ func main() {
 	conf.logDir = os.Getenv(LogFileDir)
 	conf.logger = &Logging{}
 	lookups := os.Getenv(LookupsKey)
-	conf.cache = new(sync.Map);
-    debug, err := strconv.ParseBool(os.Getenv(DebugKey))
+	conf.cache = new(sync.Map)
+	debug, err := strconv.ParseBool(os.Getenv(DebugKey))
 	if err != nil {
 		log.Print("Unable to determine debug setting: ", err)
 		conf.debug = false
