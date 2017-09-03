@@ -3,4 +3,4 @@ Description=phab-http reports
 
 [Service]
 Type=oneshot
-ExecStart=/opt/epiphyte/phab-http/reports.sh
+ExecStart=/usr/bin/phab-http-reports
