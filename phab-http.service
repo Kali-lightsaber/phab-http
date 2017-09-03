@@ -2,7 +2,7 @@
 Description=Phabricator HTTP Receiving hook
 
 [Service]
-ExecStart=/opt/epiphyte/phab-http/phab-http.sh
+ExecStart=/usr/bin/phab-http-daemon
 Restart=always
 
 [Install]
