@@ -24,9 +24,6 @@ import (
 	"time"
 )
 
-// Version identifier
-const Version = "__VERSION__"
-
 // Posting messages to rooms
 const MatrixPost = "%s/_matrix/client/r0/rooms/%s/send/m.room.message?access_token=%s"
 
@@ -62,6 +59,9 @@ const IsTitle = "title"
 
 // Built timestamp
 var built string
+
+// Tag version
+var vers string
 
 // Input configuration
 type Config struct {
@@ -442,7 +442,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 
 // main-entry point
 func main() {
-	vers := fmt.Sprintf("version: %s - %s", Version, built)
+	vers := fmt.Sprintf("version: %s - %s", vers, built)
 	log.Print(fmt.Sprintf("Starting phab-http receiving hook (%s)", vers))
 	conf := new(Config)
 	url := os.Getenv(PhabUrlKey) + "api/"
