@@ -44,15 +44,3 @@ set the environment vars required in
 /etc/epiphyte.d/phab-http.conf
 ```
 
-## development/building 
-
-```
-make
-```
-
-install
-```
-mkdir -p /opt/epiphyte/phab-http
-cp phab-http.sh phab-http /opt/epiphyte/phab-http/
-```
-
