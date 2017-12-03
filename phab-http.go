@@ -57,11 +57,8 @@ const ErrorJSON = "error_code"
 const IsTag = "tag"
 const IsTitle = "title"
 
-// Built timestamp
-var built string
-
-// Tag version
-var vers string
+// Build indicator
+var build string
 
 // Input configuration
 type Config struct {
@@ -442,7 +439,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 
 // main-entry point
 func main() {
-	vers := fmt.Sprintf("version: %s - %s", vers, built)
+	vers := fmt.Sprintf("version: %s", build)
 	log.Print(fmt.Sprintf("Starting phab-http receiving hook (%s)", vers))
 	conf := new(Config)
 	url := os.Getenv(PhabUrlKey) + "api/"
