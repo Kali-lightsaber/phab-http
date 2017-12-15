@@ -58,7 +58,7 @@ const IsTag = "tag"
 const IsTitle = "title"
 
 // Build indicator
-var build string
+const Version = "1.0.2"
 
 // Input configuration
 type Config struct {
@@ -439,7 +439,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 
 // main-entry point
 func main() {
-	vers := fmt.Sprintf("version: %s", build)
+	vers := fmt.Sprintf("version: %s", Version)
 	log.Print(fmt.Sprintf("Starting phab-http receiving hook (%s)", vers))
 	conf := new(Config)
 	url := os.Getenv(PhabUrlKey) + "api/"
