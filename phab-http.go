@@ -88,24 +88,24 @@ func buildQuery(key string, value string) string {
 
 // Write log data
 func writeLog(category string, message string, conf *Config) {
-    writeRawLog(category, message, conf, "")
+	writeRawLog(category, message, conf, "")
 }
 
 // write an error out
 func writeError(message string, err error, conf *Config) {
-    if err != nil {
+	if err != nil {
 		log.Print(message, err)
-    } else {
-        log.Print(message)
-    }
-    go writeLogError(message, conf)
+	} else {
+		log.Print(message)
+	}
+	go writeLogError(message, conf)
 }
 
 // write to file
 func writeLogError(message string, conf *Config) {
-    t := time.Now()
-    category := t.Format("2006-01-02 15:04:05") + " [ERROR] "
-    writeRawLog(category, message, conf, "error.")
+	t := time.Now()
+	category := t.Format("2006-01-02 15:04:05") + " [ERROR] "
+	writeRawLog(category, message, conf, "error.")
 }
 
 // write raw logs
@@ -134,16 +134,16 @@ func postBody(data map[string]string, url string, conf *Config) []byte {
 	body := strings.NewReader(queryString)
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
-        writeError("requesting", err, conf) 
+		writeError("requesting", err, conf)
 	} else {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-            writeError("go", err, conf)
+			writeError("go", err, conf)
 		} else {
 			results, err = ioutil.ReadAll(resp.Body)
 			if err != nil {
-                writeError("query", err, conf)
+				writeError("query", err, conf)
 			} else {
 				defer resp.Body.Close()
 				if conf.debug {
@@ -159,11 +159,11 @@ func postBody(data map[string]string, url string, conf *Config) []byte {
 func postJSON(data map[string]string, url string, conf *Config) {
 	b, err := json.Marshal(data)
 	if err != nil {
-        writeError("json", err, conf)
+		writeError("json", err, conf)
 	} else {
 		resp, err := http.Post(url, "application/json", bytes.NewReader(b))
 		if err != nil {
-            writeError("req", err, conf)
+			writeError("req", err, conf)
 		} else {
 			defer resp.Body.Close()
 			if conf.debug {
@@ -208,12 +208,12 @@ func getJSON(obj []byte, description string, errorKey bool, conf *Config) (bool,
 	var valid bool = true
 	if err != nil {
 		valid = false
-        writeError(description, err, conf)
+		writeError(description, err, conf)
 	} else {
 		if conf.debug {
 			if val, ok := output[ErrorJSON]; ok && val != nil && len(val) > 0 {
-                writeError("error detected", nil, conf)
-                writeError(string(val), nil, conf)
+				writeError("error detected", nil, conf)
+				writeError(string(val), nil, conf)
 			}
 		}
 	}
@@ -261,7 +261,7 @@ func initLookups(conf *Config, phid string) map[string]string {
 			var content []json.RawMessage
 			err := json.Unmarshal(res["data"], &content)
 			if err != nil {
-                writeError("unable to read paste", err, conf)
+				writeError("unable to read paste", err, conf)
 			} else {
 				if len(content) == 1 {
 					valid, res = digJSONOut(content[0], "contents", conf, []string{"attachments", "content"})
@@ -269,11 +269,11 @@ func initLookups(conf *Config, phid string) map[string]string {
 						var data string
 						err := json.Unmarshal(res["content"], &data)
 						if err != nil {
-                            writeError("no final count found", err, conf)
+							writeError("no final count found", err, conf)
 						} else {
 							err := json.Unmarshal([]byte(data), &lookups)
 							if err != nil {
-                                writeError("invalid paste json", err, conf)
+								writeError("invalid paste json", err, conf)
 							} else {
 								if conf.debug {
 									log.Print("lookups resolved")
@@ -282,7 +282,7 @@ func initLookups(conf *Config, phid string) map[string]string {
 						}
 					}
 				} else {
-                    writeError("incorrect paste count", nil, conf)
+					writeError("incorrect paste count", nil, conf)
 				}
 			}
 		}
@@ -328,7 +328,7 @@ func resolvePHIDs(resolving []string, conf *Config) []string {
 					var final map[string]string
 					err := json.Unmarshal(v, &final)
 					if err != nil {
-                        writeError("object", err, conf)
+						writeError("object", err, conf)
 					} else {
 						var name string = final["name"]
 						var uri string = final["uri"]
@@ -425,7 +425,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 			var output map[string]string
 			err := json.Unmarshal([]byte(storyText), &output)
 			if err != nil {
-	            writeError("unable to read tagged story", err, conf)
+				writeError("unable to read tagged story", err, conf)
 			}
 			isValid := false
 			if tagged, ok := output[IsTag]; ok {
@@ -446,7 +446,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 				storyText = fmt.Sprintf("%s%s", storyText, addedStory)
 			}
 			if !isValid {
-                writeError("unable to parse tagged story", nil, conf)
+				writeError("unable to parse tagged story", nil, conf)
 				writeError(storyText, nil, conf)
 			}
 		}
