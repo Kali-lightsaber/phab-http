@@ -87,12 +87,34 @@ func buildQuery(key string, value string) string {
 }
 
 // Write log data
-func writeLog(category string, message string, logging *Logging, dir string) {
-	logging.Lock()
-	defer logging.Unlock()
+func writeLog(category string, message string, conf *Config) {
+    writeRawLog(category, message, conf, "")
+}
+
+// write an error out
+func writeError(message string, err error, conf *Config) {
+    if err != nil {
+		log.Print(message, err)
+    } else {
+        log.Print(message)
+    }
+    go writeLogError(message, conf)
+}
+
+// write to file
+func writeLogError(message string, conf *Config) {
+    t := time.Now()
+    category := t.Format("2006-01-02 15:04:05") + " [ERROR] "
+    writeRawLog(category, message, conf, "error.")
+}
+
+// write raw logs
+func writeRawLog(category string, message string, conf *Config, prefix string) {
+	conf.logger.Lock()
+	defer conf.logger.Unlock()
 	t := time.Now()
-	logFile := "phab-http." + t.Format("2006-01-02") + ".log"
-	f, err := os.OpenFile(path.Join(dir, logFile), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	logFile := prefix + "phab-http." + t.Format("2006-01-02") + ".log"
+	f, err := os.OpenFile(path.Join(conf.logDir, logFile), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		log.Print("unable to access log", err)
 	}
@@ -112,16 +134,16 @@ func postBody(data map[string]string, url string, conf *Config) []byte {
 	body := strings.NewReader(queryString)
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
-		log.Print("Requesting: ", err)
+        writeError("requesting", err, conf) 
 	} else {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			log.Print("Go: ", err)
+            writeError("go", err, conf)
 		} else {
 			results, err = ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Print("QUERY: ", err)
+                writeError("query", err, conf)
 			} else {
 				defer resp.Body.Close()
 				if conf.debug {
@@ -134,17 +156,17 @@ func postBody(data map[string]string, url string, conf *Config) []byte {
 }
 
 // POST JSON data
-func postJSON(data map[string]string, url string, debug bool) {
+func postJSON(data map[string]string, url string, conf *Config) {
 	b, err := json.Marshal(data)
 	if err != nil {
-		log.Print("JSON: ", err)
+        writeError("json", err, conf)
 	} else {
 		resp, err := http.Post(url, "application/json", bytes.NewReader(b))
 		if err != nil {
-			log.Print("Req: ", err)
+            writeError("req", err, conf)
 		} else {
 			defer resp.Body.Close()
-			if debug {
+			if conf.debug {
 				log.Print(resp)
 			}
 		}
@@ -152,7 +174,7 @@ func postJSON(data map[string]string, url string, debug bool) {
 }
 
 // Execute an actual posting to the synapse endpoint
-func execute(text string, url string, debug bool, phids []string) {
+func execute(text string, url string, conf *Config, phids []string) {
 	m := make(map[string]string)
 	m["msgtype"] = "m.text"
 	m["body"] = BodyStart
@@ -162,7 +184,7 @@ func execute(text string, url string, debug bool, phids []string) {
 		val = val + "<br /> (references: " + strings.Join(phids, ", ") + ")"
 	}
 	m["formatted_body"] = fmt.Sprintf(Body, val)
-	postJSON(m, url, debug)
+	postJSON(m, url, conf)
 }
 
 // Check if a string represents a phid
@@ -180,29 +202,29 @@ func isPHID(value string, phids []string) bool {
 }
 
 // support pulling raw JSON from an input byte stream
-func getJSON(obj []byte, description string, errorKey bool, debug bool) (bool, map[string]json.RawMessage) {
+func getJSON(obj []byte, description string, errorKey bool, conf *Config) (bool, map[string]json.RawMessage) {
 	var output map[string]json.RawMessage
 	err := json.Unmarshal(obj, &output)
 	var valid bool = true
 	if err != nil {
 		valid = false
-		log.Print(description+": ", err)
+        writeError(description, err, conf)
 	} else {
-		if debug {
+		if conf.debug {
 			if val, ok := output[ErrorJSON]; ok && val != nil && len(val) > 0 {
-				log.Print("Error key detected")
-				log.Print(string(val))
+                writeError("error detected", nil, conf)
+                writeError(string(val), nil, conf)
 			}
 		}
 	}
 	return valid, output
 }
 
-func digJSONOut(obj []byte, description string, debug bool, dig []string) (bool, map[string]json.RawMessage) {
-	valid, res := getJSON(obj, description, false, debug)
+func digJSONOut(obj []byte, description string, conf *Config, dig []string) (bool, map[string]json.RawMessage) {
+	valid, res := getJSON(obj, description, false, conf)
 	if valid {
 		if len(dig) > 0 {
-			if debug {
+			if conf.debug {
 				log.Print("going deeper")
 				log.Print(dig)
 			}
@@ -215,7 +237,7 @@ func digJSONOut(obj []byte, description string, debug bool, dig []string) (bool,
 					sub = append(sub, element)
 				}
 			}
-			valid, res = digJSONOut(res[dig[0]], description, debug, sub)
+			valid, res = digJSONOut(res[dig[0]], description, conf, sub)
 		}
 	}
 	if !valid {
@@ -232,26 +254,26 @@ func initLookups(conf *Config, phid string) map[string]string {
 	m["constraints[phids][0]"] = phid
 	lookups := make(map[string]string)
 	obj := postBody(m, conf.paste, conf)
-	valid, output := getJSON(obj, "PHIDs", true, conf.debug)
+	valid, output := getJSON(obj, "PHIDs", true, conf)
 	if valid {
-		valid, res := getJSON(output[ResultJSON], "Results", false, conf.debug)
+		valid, res := getJSON(output[ResultJSON], "Results", false, conf)
 		if valid {
 			var content []json.RawMessage
 			err := json.Unmarshal(res["data"], &content)
 			if err != nil {
-				log.Print("Unable to read paste", err)
+                writeError("unable to read paste", err, conf)
 			} else {
 				if len(content) == 1 {
-					valid, res = digJSONOut(content[0], "contents", conf.debug, []string{"attachments", "content"})
+					valid, res = digJSONOut(content[0], "contents", conf, []string{"attachments", "content"})
 					if valid {
 						var data string
 						err := json.Unmarshal(res["content"], &data)
 						if err != nil {
-							log.Print("no final content found")
+                            writeError("no final count found", err, conf)
 						} else {
 							err := json.Unmarshal([]byte(data), &lookups)
 							if err != nil {
-								log.Print("invalid paste json")
+                                writeError("invalid paste json", err, conf)
 							} else {
 								if conf.debug {
 									log.Print("lookups resolved")
@@ -260,7 +282,7 @@ func initLookups(conf *Config, phid string) map[string]string {
 						}
 					}
 				} else {
-					log.Print("Error - incorrect amount of pastes...")
+                    writeError("incorrect paste count", nil, conf)
 				}
 			}
 		}
@@ -298,15 +320,15 @@ func resolvePHIDs(resolving []string, conf *Config) []string {
 			idx++
 		}
 		obj := postBody(m, conf.phids, conf)
-		valid, output := getJSON(obj, "PHIDs", true, conf.debug)
+		valid, output := getJSON(obj, "PHIDs", true, conf)
 		if valid {
-			valid, res := getJSON(output[ResultJSON], "Results", false, conf.debug)
+			valid, res := getJSON(output[ResultJSON], "Results", false, conf)
 			if valid {
 				for _, v := range res {
 					var final map[string]string
 					err := json.Unmarshal(v, &final)
 					if err != nil {
-						log.Print("Object: ", err)
+                        writeError("object", err, conf)
 					} else {
 						var name string = final["name"]
 						var uri string = final["uri"]
@@ -332,7 +354,7 @@ func resolvePHIDs(resolving []string, conf *Config) []string {
 				results = append(results, item)
 			}
 		}
-		go writeLog(element, strings.Join(writeRefs, " "), conf.logger, conf.logDir)
+		go writeLog(element, strings.Join(writeRefs, " "), conf)
 	}
 
 	if len(results) > 0 {
@@ -403,7 +425,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 			var output map[string]string
 			err := json.Unmarshal([]byte(storyText), &output)
 			if err != nil {
-				log.Print("unable to read tagged story", err)
+	            writeError("unable to read tagged story", err, conf)
 			}
 			isValid := false
 			if tagged, ok := output[IsTag]; ok {
@@ -424,8 +446,8 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 				storyText = fmt.Sprintf("%s%s", storyText, addedStory)
 			}
 			if !isValid {
-				log.Print("unable to parse tagged story")
-				log.Print(storyText)
+                writeError("unable to parse tagged story", nil, conf)
+				writeError(storyText, nil, conf)
 			}
 		}
 		if conf.debug {
@@ -433,7 +455,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 			log.Print(isTagged)
 			log.Print(toRoom)
 		}
-		execute(storyText, toRoom, conf.debug, phids)
+		execute(storyText, toRoom, conf, phids)
 	}
 }
 
@@ -483,7 +505,7 @@ func main() {
 		log.Print("lookups ready")
 		log.Print(conf.lookups)
 	}
-	writeLog("startup", "started", conf.logger, conf.logDir)
+	writeLog("startup", "started", conf)
 	http.HandleFunc("/alive", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, vers)
 	})
