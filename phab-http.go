@@ -58,7 +58,7 @@ const IsTag = "tag"
 const IsTitle = "title"
 
 // Build indicator
-const Version = "1.0.2"
+const Version = "1.1.0"
 
 // Input configuration
 type Config struct {
