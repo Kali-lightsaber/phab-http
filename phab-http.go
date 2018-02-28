@@ -24,41 +24,35 @@ import (
 	"time"
 )
 
-// Posting messages to rooms
-const MatrixPost = "%s/_matrix/client/r0/rooms/%s/send/m.room.message?access_token=%s"
-
-// Posts as HTML, needs to know and use a body type
-const BodyStart = "<body>"
-const BodyEnd = "</body>"
-const Body = BodyStart + "%s" + BodyEnd
-
-// Provides conversion of T[0-9]+ naming to actual URLs
-
-// Environment keys
-const SynapseKey = "SYNAPSE_"
-const PhabUrlKey = SynapseKey + "PHAB_URL"
-const ApiTokenKey = SynapseKey + "API_TOKEN"
-const FeedRoomKey = SynapseKey + "FEED_ROOM"
-const HostKey = SynapseKey + "HOST"
-const DebugKey = SynapseKey + "FEED_DEBUG"
-const ConduitKey = SynapseKey + "PHAB_TOKEN"
-const ResolveKey = SynapseKey + "FEED_PHIDS"
-const LookupsKey = SynapseKey + "LOOKUP_PHID"
-const LogFileDir = SynapseKey + "FEED_LOG"
-
-// PHID types
-const IsPHIDType = "PHID-"
-
-// JSON keys
-const ResultJSON = "result"
-const ErrorJSON = "error_code"
-
-// Feed keywords for news stories
-const IsTag = "tag"
-const IsTitle = "title"
-
-// Build indicator
-const Version = "1.1.0"
+const (
+	// Posting messages to rooms
+	MatrixPost = "%s/_matrix/client/r0/rooms/%s/send/m.room.message?access_token=%s"
+	// Posts as HTML, needs to know and use a body type
+	BodyStart = "<body>"
+	BodyEnd   = "</body>"
+	Body      = BodyStart + "%s" + BodyEnd
+	// Environment keys
+	SynapseKey  = "SYNAPSE_"
+	PhabUrlKey  = SynapseKey + "PHAB_URL"
+	ApiTokenKey = SynapseKey + "API_TOKEN"
+	FeedRoomKey = SynapseKey + "FEED_ROOM"
+	HostKey     = SynapseKey + "HOST"
+	DebugKey    = SynapseKey + "FEED_DEBUG"
+	ConduitKey  = SynapseKey + "PHAB_TOKEN"
+	ResolveKey  = SynapseKey + "FEED_PHIDS"
+	LookupsKey  = SynapseKey + "LOOKUP_PHID"
+	LogFileDir  = SynapseKey + "FEED_LOG"
+	// PHID types
+	IsPHIDType = "PHID-"
+	// JSON keys
+	ResultJSON = "result"
+	ErrorJSON  = "error_code"
+	// Feed keywords for news stories
+	IsTag   = "tag"
+	IsTitle = "title"
+	// Build indicator
+	Version = "1.1.0"
+)
 
 // Input configuration
 type Config struct {
