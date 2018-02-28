@@ -1,10 +1,15 @@
-OUTPUT=
+OUTPUT=bin/
+SRC=src/
 .PHONY: all
 
-all: build format
+all: clean build format
+
+clean:
+	rm -rf $(OUTPUT)
+	mkdir -p $(OUTPUT)
 
 build:
-	go build -o $(OUTPUT)phab-http phab-http.go
+	go build -o $(OUTPUT)phab-http $(SRC)phab-http.go
 
 format:
-	exit $(shell gofmt -l *.go | wc -l)
+	exit $(shell gofmt -l $(SRC)/* | wc -l)
