@@ -13,3 +13,6 @@ build:
 
 format:
 	exit $(shell gofmt -l $(SRC)/* | wc -l)
+
+deps:
+	git submodule update --init

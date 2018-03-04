@@ -13,7 +13,6 @@ import (
 	"html"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -22,6 +21,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/epiphyte/goutils"
 )
 
 const (
@@ -88,6 +88,7 @@ func writeLog(category string, message string, conf *Config) {
 // write an error out
 func writeError(message string, err error, conf *Config) {
 	if err != nil {
+		goutils
 		log.Print(message, err)
 	} else {
 		log.Print(message)

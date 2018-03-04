@@ -1,0 +1,3 @@
+[submodule "modules/goutils"]
+	path = modules/goutils
+	url = https://github.com/epiphyte/goutils
