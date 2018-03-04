@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/epiphyte/goutils"
 	"html"
 	"io"
 	"io/ioutil"
@@ -21,7 +22,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"github.com/epiphyte/goutils"
 )
 
 const (
@@ -88,10 +88,9 @@ func writeLog(category string, message string, conf *Config) {
 // write an error out
 func writeError(message string, err error, conf *Config) {
 	if err != nil {
-		goutils
-		log.Print(message, err)
+		goutils.WriteError(message, err)
 	} else {
-		log.Print(message)
+		goutils.WriteWarn(message)
 	}
 	go writeLogError(message, conf)
 }
@@ -111,7 +110,8 @@ func writeRawLog(category string, message string, conf *Config, prefix string) {
 	logFile := prefix + "phab-http." + t.Format("2006-01-02") + ".log"
 	f, err := os.OpenFile(path.Join(conf.logDir, logFile), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
-		log.Print("unable to access log", err)
+		goutils.WriteError("unable to access log", err)
+		return
 	}
 	defer f.Close()
 	fmt.Fprintf(f, "%s -> %s\n", category, message)
@@ -141,9 +141,6 @@ func postBody(data map[string]string, url string, conf *Config) []byte {
 				writeError("query", err, conf)
 			} else {
 				defer resp.Body.Close()
-				if conf.debug {
-					log.Print(resp)
-				}
 			}
 		}
 	}
@@ -161,9 +158,6 @@ func postJSON(data map[string]string, url string, conf *Config) {
 			writeError("req", err, conf)
 		} else {
 			defer resp.Body.Close()
-			if conf.debug {
-				log.Print(resp)
-			}
 		}
 	}
 }
@@ -220,8 +214,7 @@ func digJSONOut(obj []byte, description string, conf *Config, dig []string) (boo
 	if valid {
 		if len(dig) > 0 {
 			if conf.debug {
-				log.Print("going deeper")
-				log.Print(dig)
+				goutils.WriteDebug("deeper", dig...)
 			}
 			var sub []string
 			if len(dig) > 1 {
@@ -236,7 +229,7 @@ func digJSONOut(obj []byte, description string, conf *Config, dig []string) (boo
 		}
 	}
 	if !valid {
-		log.Print("Unable to dig out see ^^^")
+		goutils.WriteInfo("unable to dig out, see ^^^")
 	}
 	return valid, res
 }
@@ -270,9 +263,7 @@ func initLookups(conf *Config, phid string) map[string]string {
 							if err != nil {
 								writeError("invalid paste json", err, conf)
 							} else {
-								if conf.debug {
-									log.Print("lookups resolved")
-								}
+								goutils.WriteDebug("lookups resolved")
 							}
 						}
 					}
@@ -295,18 +286,18 @@ func resolvePHIDs(resolving []string, conf *Config) []string {
 	var phids []string
 	for _, element := range resolving {
 		if conf.debug {
-			log.Print(element)
+			goutils.WriteDebug(element)
 		}
 		if _, ok := conf.cache.Load(element); !ok {
 			if conf.debug {
-				log.Print("calling to resolve")
+				goutils.WriteDebug("resolving...")
 			}
 			phids = append(phids, element)
 		}
 	}
 	if len(phids) > 0 {
 		if conf.debug {
-			log.Print("calling to resolve phids")
+			goutils.WriteDebug("calling to resolve phids")
 		}
 		m := make(map[string]string)
 		var idx int = 0
@@ -370,10 +361,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 	var isTagged bool = false
 	for k, v := range r.Form {
 		if conf.debug {
-			log.Print("===")
-			log.Print(k)
-			log.Print(v)
-			log.Print("===")
+			goutils.WriteDebug("kv: "+k, v...)
 		}
 		if len(v) > 0 {
 			if k == "storyText" {
@@ -385,8 +373,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 				for _, element := range v {
 					if isPHID(element, conf.resolving) {
 						if conf.debug {
-							log.Print("is phid")
-							log.Print(element)
+							goutils.WriteDebug("phid:", element)
 						}
 						phids = append(phids, element)
 					} else {
@@ -404,7 +391,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 				phids = phids[:0]
 			} else {
 				if conf.debug {
-					log.Print("Resolving phids")
+					goutils.WriteDebug("resolving phids")
 				}
 				phids = resolvePHIDs(phids, conf)
 			}
@@ -414,8 +401,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 		storyText := strings.Join(story, "")
 		if isTagged {
 			if conf.debug {
-				log.Print(storyText)
-				log.Print(toRoom)
+				goutils.WriteDebug("story", storyText, toRoom)
 			}
 			var output map[string]string
 			err := json.Unmarshal([]byte(storyText), &output)
@@ -446,9 +432,10 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 			}
 		}
 		if conf.debug {
-			log.Print(storyText)
-			log.Print(isTagged)
-			log.Print(toRoom)
+			goutils.WriteDebug("routing", storyText, toRoom)
+			if isTagged {
+				goutils.WriteDebug("tagged")
+			}
 		}
 		execute(storyText, toRoom, conf, phids)
 	}
@@ -457,7 +444,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 // main-entry point
 func main() {
 	vers := fmt.Sprintf("version: %s", Version)
-	log.Print(fmt.Sprintf("Starting phab-http receiving hook (%s)", vers))
+	goutils.WriteInfo(fmt.Sprintf("Starting phab-http receiving hook (%s)", vers))
 	conf := new(Config)
 	url := os.Getenv(PhabUrlKey) + "api/"
 	conf.phids = url + "phid.query"
@@ -476,29 +463,30 @@ func main() {
 	conf.cache = new(sync.Map)
 	debug, err := strconv.ParseBool(os.Getenv(DebugKey))
 	if err != nil {
-		log.Print("Unable to determine debug setting: ", err)
+		goutils.WriteError("unable to determine debug setting", err)
 		conf.debug = false
 	} else {
 		conf.debug = debug
 	}
+	goutils.ConfigureLogging(conf.debug, true, true, true, false)
 	if conf.debug {
-		log.Print("debugging enabled")
-		log.Print(conf.phids)
-		log.Print(conf.resolving)
-		log.Print(conf.conduit)
-		log.Print(conf.url)
-		log.Print(conf.token)
-		log.Print(conf.room)
-		log.Print(conf.paste)
-		log.Print(lookups)
-		log.Print(conf.logDir)
-		log.Print("initialize lookups")
+		goutils.WriteDebug("debug on")
+		goutils.WriteDebug("phids", conf.phids)
+		goutils.WriteDebug("resolving", conf.resolving...)
+		goutils.WriteDebug("api", conf.conduit, conf.url, conf.token, conf.room, conf.paste)
+		goutils.WriteDebug("lookups")
+		for k, v := range lookups {
+			goutils.WriteDebug(strconv.Itoa(k), string(v))
+		}
+		goutils.WriteDebug("logging", conf.logDir)
+		goutils.WriteDebug("init lookups...")
 	}
-
 	conf.lookups = initLookups(conf, lookups)
 	if conf.debug {
-		log.Print("lookups ready")
-		log.Print(conf.lookups)
+		goutils.WriteDebug("lookups ready")
+		for k, v := range conf.lookups {
+			goutils.WriteDebug(k, string(v))
+		}
 	}
 	writeLog("startup", "started", conf)
 	http.HandleFunc("/alive", func(w http.ResponseWriter, r *http.Request) {
@@ -510,9 +498,9 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		postStory(w, r, conf)
 	})
-	log.Print("ready...")
+	goutils.WriteInfo("started")
 	listen := http.ListenAndServe(":8080", nil)
 	if listen != nil {
-		log.Fatal("ListenAndServe: ", listen)
+		goutils.WriteError("listen failure", listen)
 	}
 }

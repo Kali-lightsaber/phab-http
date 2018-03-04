@@ -1,5 +1,6 @@
 OUTPUT=bin/
 SRC=src/
+export GOPATH := $(PWD)/vendor
 .PHONY: all
 
 all: clean build format
