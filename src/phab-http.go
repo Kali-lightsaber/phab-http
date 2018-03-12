@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/epiphyte/goutils"
 	"html"
 	"io"
 	"io/ioutil"
@@ -22,6 +21,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/epiphyte/goutils"
 )
 
 const (
