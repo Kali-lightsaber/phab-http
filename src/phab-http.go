@@ -468,7 +468,10 @@ func main() {
 	} else {
 		conf.debug = debug
 	}
-	goutils.ConfigureLogging(conf.debug, true, true, true, false)
+	logging := goutils.NewLogOptions()
+	logging.Debug = conf.debug
+	logging.Info = true
+	goutils.ConfigureLogging(logging)
 	if conf.debug {
 		goutils.WriteDebug("debug on")
 		goutils.WriteDebug("phids", conf.phids)
