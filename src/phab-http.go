@@ -52,7 +52,7 @@ const (
 	IsTag   = "tag"
 	IsTitle = "title"
 	// Build indicator
-	Version = "1.2.0"
+	Version = "1.2.1"
 )
 
 // Input configuration
