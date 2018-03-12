@@ -93,14 +93,6 @@ func writeError(message string, err error, conf *Config) {
 	} else {
 		goutils.WriteWarn(message)
 	}
-	go writeLogError(message, conf)
-}
-
-// write to file
-func writeLogError(message string, conf *Config) {
-	t := time.Now()
-	category := t.Format("2006-01-02 15:04:05") + " [ERROR] "
-	writeRawLog(category, message, conf, "error.")
 }
 
 // write raw logs
