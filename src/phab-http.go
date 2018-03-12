@@ -313,17 +313,17 @@ func resolvePHIDs(resolving []string, conf *Config) []string {
 					err := json.Unmarshal(v, &final)
 					if err != nil {
 						writeError("object", err, conf)
-					} else {
-						var name string = final["name"]
-						var uri string = final["uri"]
-						var resolved []string
-
-						resolved = append(resolved, "<a href='"+uri+"'>"+html.EscapeString(name)+"</a>")
-						if val, ok := conf.lookups[name]; ok {
-							resolved = append(resolved, "aka: "+strings.Replace(val, ",", " ", -1))
-						}
-						conf.cache.Store(final["phid"], resolved)
+						continue
 					}
+					var name string = final["name"]
+					var uri string = final["uri"]
+					var resolved []string
+
+					resolved = append(resolved, "<a href='"+uri+"'>"+html.EscapeString(name)+"</a>")
+					if val, ok := conf.lookups[name]; ok {
+						resolved = append(resolved, "aka: "+strings.Replace(val, ",", " ", -1))
+					}
+					conf.cache.Store(final["phid"], resolved)
 				}
 			}
 		}
@@ -405,6 +405,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 			err := json.Unmarshal([]byte(storyText), &output)
 			if err != nil {
 				writeError("unable to read tagged story", err, conf)
+				return
 			}
 			isValid := false
 			if tagged, ok := output[IsTag]; ok {
@@ -427,6 +428,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 			if !isValid {
 				writeError("unable to parse tagged story", nil, conf)
 				writeError(storyText, nil, conf)
+				return
 			}
 		}
 		if conf.debug {
