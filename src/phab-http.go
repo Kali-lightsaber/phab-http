@@ -152,13 +152,11 @@ func postJSON(data map[string]string, url string, conf *Config) {
 	b, err := json.Marshal(data)
 	if err != nil {
 		writeError("json", err, conf)
-	} else {
-		resp, err := http.Post(url, "application/json", bytes.NewReader(b))
-		if err != nil {
-			writeError("req", err, conf)
-		} else {
-			defer resp.Body.Close()
-		}
+		return
+	}
+	_, err = http.Post(url, "application/json", bytes.NewReader(b))
+	if err != nil {
+		writeError("req", err, conf)
 	}
 }
 
