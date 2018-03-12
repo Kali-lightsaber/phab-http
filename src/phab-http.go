@@ -83,7 +83,7 @@ func buildQuery(key string, value string) string {
 
 // Write log data
 func writeLog(category string, message string, conf *Config) {
-	writeRawLog(category, message, conf, "")
+	writeRawLog(category, message, conf)
 }
 
 // write an error out
@@ -96,11 +96,11 @@ func writeError(message string, err error, conf *Config) {
 }
 
 // write raw logs
-func writeRawLog(category string, message string, conf *Config, prefix string) {
+func writeRawLog(category string, message string, conf *Config) {
 	conf.logger.Lock()
 	defer conf.logger.Unlock()
 	t := time.Now()
-	logFile := prefix + "phab-http." + t.Format("2006-01-02") + ".log"
+	logFile := "phab-http." + t.Format("2006-01-02") + ".log"
 	f, err := os.OpenFile(path.Join(conf.logDir, logFile), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		goutils.WriteError("unable to access log", err)
