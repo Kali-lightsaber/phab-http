@@ -445,7 +445,6 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 // main-entry point
 func main() {
 	vers := fmt.Sprintf("version: %s", Version)
-	goutils.WriteInfo(fmt.Sprintf("Starting phab-http receiving hook (%s)", vers))
 	conf := new(Config)
 	url := os.Getenv(PhabUrlKey) + "api/"
 	conf.phids = url + "phid.query"
@@ -499,7 +498,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		postStory(w, r, conf)
 	})
-	goutils.WriteInfo("started")
+	goutils.WriteInfo(fmt.Sprintf("Starting phab-http receiving hook (%s)", vers))
 	listen := http.ListenAndServe(":8080", nil)
 	if listen != nil {
 		goutils.WriteError("listen failure", listen)
