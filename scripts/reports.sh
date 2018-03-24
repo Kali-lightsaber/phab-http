@@ -20,11 +20,6 @@ _last() {
 }
 
 _content(){
-    echo "
-> this page is maintained by a bot
-> do _NOT_ edit it here
-
-"
     echo " | date | user |"
     echo " | ---  | ---  |"
     _last | sort -r
@@ -32,14 +27,7 @@ _content(){
 
 _lastseen() {
     content=$(_content)
-    content=$(python -c "import urllib.parse
-print(urllib.parse.quote(\"\"\"$content\"\"\"))")
-    echo $content
-    curl $PHAB_HOST/api/phriction.edit \
-        -d api.token=$SYNAPSE_PHAB_TOKEN \
-        -d slug=meta/reports/lastseen \
-        -d title=Last%20Seen \
-        -d content=$content
+    echo "$content" > ${SYNAPSE_PHAB_INBOX}activity.md
 }
 
 _lastseen
