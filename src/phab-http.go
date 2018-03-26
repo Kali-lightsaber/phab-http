@@ -51,9 +51,9 @@ const (
 	// Feed keywords for news stories
 	IsTag   = "tag"
 	IsTitle = "title"
-	// Build indicator
-	Version = "1.2.1"
 )
+
+var version = "master"
 
 // Input configuration
 type Config struct {
@@ -436,7 +436,7 @@ func postStory(w http.ResponseWriter, r *http.Request, conf *Config) {
 
 // main-entry point
 func main() {
-	vers := fmt.Sprintf("version: %s", Version)
+	vers := fmt.Sprintf("version: %s", version)
 	conf := new(Config)
 	url := os.Getenv(PhabUrlKey) + "api/"
 	conf.phids = url + "phid.query"
